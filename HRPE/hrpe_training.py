@@ -24,15 +24,13 @@ step_size = num_samples // minibatch_size * 10
 class HigherResolutionPoseEstimation:
     def __init__(self, map_file, is_train):
         self.sample_count = 0
-        self.minibatch_count = 0
+        
         with open(map_file) as f:
             self.map_list = f.readlines()
         if is_train:
             random.shuffle(self.map_list)
 
     def next_minibatch(self, minibatch_size):
-        self.minibatch_count = minibatch_size
-
         batch_img = np.zeros((minibatch_size, img_channel, img_height, img_width), dtype="float32")
         batch_kps = np.zeros((minibatch_size, num_keypoint, img_height // 4, img_width // 4), dtype="float32")
         batch_psn = np.zeros((minibatch_size, 1), dtype="float32")
