@@ -26,6 +26,7 @@ step_size = num_samples // minibatch_size * 10
 class RealTimeSemanticSegmentation:
     def __init__(self, map_file, is_train):
         self.sample_count = 0
+        self.minibatch_count = 0
         
         with open(map_file) as f:
             self.map_list = f.readlines()
@@ -33,6 +34,8 @@ class RealTimeSemanticSegmentation:
             random.shuffle(self.map_list)
 
     def next_minibatch(self, minibatch_size):
+        self.minibatch_count = minibatch_size
+        
         batch_image = np.zeros((minibatch_size, img_channel, img_height, img_width), dtype="float32")
         batch_label = np.zeros((minibatch_size, num_classes, img_height, img_width), dtype="float32")
 
@@ -43,7 +46,7 @@ class RealTimeSemanticSegmentation:
             batch_image[i] = np.ascontiguousarray(cv2.imread(img_file).transpose(2, 0, 1), dtype="float32")
             batch_label[i] = np.load(ann_file)
 
-        self.sample_count += minibatch_size
+        self.sample_count += self.minibatch_count
 
         return batch_image, batch_label
 
