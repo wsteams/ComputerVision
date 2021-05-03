@@ -78,6 +78,7 @@ def batch_normalization(scale, bias, mean, variance, spatial=True, name=''):
 
 
 def SeparableConvolution2D(in_channel, out_channel, kernel_size, pad=True, stride=1, dilation=1, name=''):
+    """ Separable Convolution 2D (2017) """
     W_depthwise = C.parameter(shape=(in_channel, 1, kernel_size, kernel_size), init=C.he_normal(), name='W')
     bn_depth_wise = BatchNormalization(map_rank=1, use_cntk_engine=True)
 
