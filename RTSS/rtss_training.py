@@ -107,18 +107,6 @@ def SeparableConvolution2D(in_channel, out_channel, kernel_size, pad=True, strid
     return separable_convolution
 
 
-def Upsample(shape, name=''):
-    @C.BlockFunction('Upsample', name)
-    def upsample(x):
-        xr = C.reshape(x, (shape[0], shape[1], 1, shape[2], 1))
-        xx = C.splice(xr, xr, axis=-1)
-        xy = C.splice(xx, xx, axis=-3)
-        r = C.reshape(xy, (shape[0], shape[1] * 2, shape[2] * 2))
-        return r
-
-    return upsample
-
-
 def JointPyramidUpsampling(shape, name=''):
     """ Joint Pyramid Upsampling """
     conv3 = Convolution2D((3, 3), shape[0], init=C.he_normal(), pad=True, strides=1, bias=False)
@@ -139,11 +127,10 @@ def JointPyramidUpsampling(shape, name=''):
         h3 = Cx.mish(bn3(conv3(h3)))
 
         h4 = Cx.mish(bn4(conv4(h4)))
-        h4 = Upsample((shape[0], shape[1] // 2, shape[2] // 2))(h4)
+        h4 = Cx.upsample(h4, 2)
 
         h5 = Cx.mish(bn5(conv5(h5)))
-        h5 = Upsample((shape[0], shape[1] // 4, shape[2] // 4))(h5)
-        h5 = Upsample((shape[0], shape[1] // 2, shape[2] // 2))(h5)
+        h5 = Cx.upsample(Cx.upsample(h5, 2), 2)
 
         h = C.splice(h3, h4, h5, axis=0)
 
@@ -276,11 +263,10 @@ def rtss320x480(h):
         #
         h = Cx.mish(BatchNormalization()(Convolution2D((1, 1), 320)(h)))
 
-        h = C.splice(Upsample(h.shape)(h), Cx.mish(BatchNormalization()(Convolution2D((1, 1), 64)(h2))), axis=0)
+        h = C.splice(Cx.upsample(h, 2), Cx.mish(BatchNormalization()(Convolution2D((1, 1), 64)(h2))), axis=0)
 
         h = Cx.mish(SeparableConvolution2D(384, 384, 3)(h))
-        h = Upsample(h.shape)(h)
-        h = Upsample(h.shape)(h)
+        h = Cx.upsample(Cx.upsample(h, 2), 2)
         h = Convolution2D((1, 1), num_classes, activation=None, bias=True, init=C.glorot_uniform())(h)
 
         return h
