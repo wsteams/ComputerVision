@@ -80,7 +80,7 @@ def batch_normalization(scale, bias, mean, variance, spatial=True, name=''):
 def SeparableConvolution2D(in_channel, out_channel, kernel_size, pad=True, stride=1, dilation=1, name=''):
     """ Separable Convolution 2D (2017) """
     W_depthwise = C.parameter(shape=(in_channel, 1, kernel_size, kernel_size), init=C.he_normal(), name='W')
-    bn_depth_wise = BatchNormalization(map_rank=1, use_cntk_engine=True)
+    bn_depthwise = BatchNormalization(map_rank=1, use_cntk_engine=True)
 
     W_pointwise = C.parameter(shape=(out_channel, in_channel, 1, 1), init=C.he_normal(), name='W')
     bn_pointwise = BatchNormalization(map_rank=1, use_cntk_engine=True)
@@ -99,7 +99,7 @@ def SeparableConvolution2D(in_channel, out_channel, kernel_size, pad=True, strid
     @C.BlockFunction('SeparableConvolution2D', name)
     def separable_convolution(x):
         h = C.convolution(W_depthwise, x, strides=strides, auto_padding=padding, dilation=dilated, groups=in_channel)
-        h = bn_depth_wise(h)
+        h = bn_depthwise(h)
         h = C.convolution(W_pointwise, h, strides=strides, auto_padding=padding)
         h = bn_pointwise(h)
         return h
